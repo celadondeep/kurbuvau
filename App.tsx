@@ -227,7 +227,7 @@ export default function App() {
           </Pressable>
           {permission?.accessPrivileges === 'limited' && (
             <Pressable
-              onPress={() => MediaLibrary.presentPermissionsPicker(['photo'])}
+              onPress={() => MediaLibrary.presentPermissionsPickerAsync(['photo'])}
               style={styles.secondaryButton}
             >
               <Text style={styles.secondaryButtonText}>Pasirinkti daugiau nuotraukų</Text>

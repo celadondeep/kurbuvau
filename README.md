@@ -1,6 +1,6 @@
 # Kur buvau
 
-„iPhone“ programėlės prototipas, kuris lokaliai nuskaito nuotraukų GPS vietas ir parodo jas žemėlapyje.
+„iPhone“ programėlės prototipas, kuris lokaliai nuskaito nuotraukų GPS vietas ir parodo jas žemėlapyje. Ši versija naudoja „Expo SDK 54“, suderinamą su vieša „Expo Go“ versija iš „App Store“.
 
 ## Kas jau veikia
 
