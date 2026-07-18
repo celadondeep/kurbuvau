@@ -1,25 +1,22 @@
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
-import { clusterPhotos } from './map';
-import { GeoPhoto } from './types';
+import { ExportCluster } from './types';
 
-export async function exportPhotosToKml(photos: GeoPhoto[], year: number | null) {
-  if (photos.length === 0) {
+export async function exportClustersToKml(clusters: ExportCluster[], year: number | null) {
+  if (clusters.length === 0) {
     throw new Error('Nėra vietų, kurias būtų galima eksportuoti.');
   }
 
-  const exportClusters = clusterPhotos(photos, 0.05);
-  const placemarks = exportClusters
+  const placemarks = clusters
     .map((cluster, index) => {
-      const dates = cluster.photos.map((photo) => photo.creationTime).sort((a, b) => a - b);
-      const firstDate = new Date(dates[0]).toISOString().slice(0, 10);
-      const lastDate = new Date(dates[dates.length - 1]).toISOString().slice(0, 10);
+      const firstDate = new Date(cluster.firstTime).toISOString().slice(0, 10);
+      const lastDate = new Date(cluster.lastTime).toISOString().slice(0, 10);
       const dateText = firstDate === lastDate ? firstDate : `${firstDate} – ${lastDate}`;
 
       return `
     <Placemark>
-      <name>${xmlEscape(`Vieta ${index + 1} • ${cluster.photos.length} nuotraukų`)}</name>
+      <name>${xmlEscape(`Vieta ${index + 1} • ${cluster.count} nuotraukų`)}</name>
       <description>${xmlEscape(dateText)}</description>
       <Point><coordinates>${cluster.longitude},${cluster.latitude},0</coordinates></Point>
     </Placemark>`;
@@ -36,14 +33,11 @@ export async function exportPhotosToKml(photos: GeoPhoto[], year: number | null)
 
   const filename = year === null ? 'kur-buvau.kml' : `kur-buvau-${year}.kml`;
   const file = new File(Paths.cache, filename);
-  if (file.exists) {
-    file.delete();
-  }
+  if (file.exists) file.delete();
   file.create();
   file.write(kml);
 
-  const sharingAvailable = await Sharing.isAvailableAsync();
-  if (!sharingAvailable) {
+  if (!(await Sharing.isAvailableAsync())) {
     throw new Error('Šiame įrenginyje bendrinimas nepasiekiamas.');
   }
 

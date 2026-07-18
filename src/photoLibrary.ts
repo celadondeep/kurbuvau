@@ -2,17 +2,23 @@ import * as MediaLibrary from 'expo-media-library';
 
 import { GeoPhoto, ScanProgress } from './types';
 
-const PAGE_SIZE = 250;
-const PARALLEL_READS = 20;
+const PAGE_SIZE = 200;
+const PARALLEL_READS = 8;
 
-export async function scanPhotoLibrary(
-  onProgress: (progress: ScanProgress) => void,
-): Promise<GeoPhoto[]> {
-  const result: GeoPhoto[] = [];
-  let after: string | undefined;
-  let scanned = 0;
+type ScanOptions = {
+  afterCursor: string | null;
+  scanned: number;
+  found: number;
+  shouldStop: () => boolean;
+  onBatch: (photos: GeoPhoto[], progress: ScanProgress, endCursor: string | null) => Promise<void>;
+};
 
-  while (true) {
+export async function scanPhotoLibrary(options: ScanOptions): Promise<ScanProgress> {
+  let after = options.afterCursor ?? undefined;
+  let scanned = options.scanned;
+  let found = options.found;
+
+  while (!options.shouldStop()) {
     const page = await MediaLibrary.getAssetsAsync({
       first: PAGE_SIZE,
       after,
@@ -21,15 +27,21 @@ export async function scanPhotoLibrary(
     });
 
     if (page.assets.length === 0) {
-      break;
+      const progress = { scanned, found, total: page.totalCount, complete: true };
+      await options.onBatch([], progress, null);
+      return progress;
     }
+
+    const locatedPhotos: GeoPhoto[] = [];
 
     for (let index = 0; index < page.assets.length; index += PARALLEL_READS) {
       const slice = page.assets.slice(index, index + PARALLEL_READS);
       const resolved = await Promise.all(
         slice.map(async (asset): Promise<GeoPhoto | null> => {
           try {
-            const info = await MediaLibrary.getAssetInfoAsync(asset);
+            const info = await MediaLibrary.getAssetInfoAsync(asset, {
+              shouldDownloadFromNetwork: false,
+            });
             const location = info.location;
             if (!location || !isValidCoordinate(location.latitude, location.longitude)) {
               return null;
@@ -48,18 +60,23 @@ export async function scanPhotoLibrary(
         }),
       );
 
-      result.push(...resolved.filter((photo): photo is GeoPhoto => photo !== null));
-      scanned += slice.length;
-      onProgress({ scanned, found: result.length });
+      locatedPhotos.push(...resolved.filter((photo): photo is GeoPhoto => photo !== null));
     }
 
-    if (!page.hasNextPage) {
-      break;
+    scanned += page.assets.length;
+    found += locatedPhotos.length;
+    const complete = !page.hasNextPage;
+    const progress = { scanned, found, total: page.totalCount, complete };
+    await options.onBatch(locatedPhotos, progress, complete ? null : page.endCursor);
+
+    if (complete) {
+      return progress;
     }
+
     after = page.endCursor;
   }
 
-  return result;
+  return { scanned, found, total: Math.max(scanned, options.scanned), complete: false };
 }
 
 function isValidCoordinate(latitude: number, longitude: number) {

@@ -6,14 +6,35 @@ export type GeoPhoto = {
   longitude: number;
 };
 
-export type PhotoCluster = {
+export type MapCluster = {
   key: string;
   latitude: number;
   longitude: number;
-  photos: GeoPhoto[];
+  count: number;
+  cellLatitude: number;
+  cellLongitude: number;
+  gridSize: number;
+};
+
+export type ExportCluster = {
+  latitude: number;
+  longitude: number;
+  count: number;
+  firstTime: number;
+  lastTime: number;
 };
 
 export type ScanProgress = {
   scanned: number;
   found: number;
+  total: number;
+  complete: boolean;
+};
+
+export type ScanState = {
+  afterCursor: string | null;
+  scanned: number;
+  found: number;
+  total: number;
+  complete: boolean;
 };
