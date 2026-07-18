@@ -1,9 +1,4 @@
-import {
-  AssetField,
-  MediaType,
-  Query,
-  SortDescriptor,
-} from 'expo-media-library';
+import * as MediaLibrary from 'expo-media-library';
 
 import { GeoPhoto, ScanProgress } from './types';
 
@@ -14,44 +9,36 @@ export async function scanPhotoLibrary(
   onProgress: (progress: ScanProgress) => void,
 ): Promise<GeoPhoto[]> {
   const result: GeoPhoto[] = [];
-  let offset = 0;
+  let after: string | undefined;
   let scanned = 0;
 
   while (true) {
-    const sort: SortDescriptor = {
-      key: AssetField.CREATION_TIME,
-      ascending: false,
-    };
-    const assets = await new Query()
-      .eq(AssetField.MEDIA_TYPE, MediaType.IMAGE)
-      .orderBy(sort)
-      .limit(PAGE_SIZE)
-      .offset(offset)
-      .exe();
+    const page = await MediaLibrary.getAssetsAsync({
+      first: PAGE_SIZE,
+      after,
+      mediaType: [MediaLibrary.MediaType.photo],
+      sortBy: [[MediaLibrary.SortBy.creationTime, false]],
+    });
 
-    if (assets.length === 0) {
+    if (page.assets.length === 0) {
       break;
     }
 
-    for (let index = 0; index < assets.length; index += PARALLEL_READS) {
-      const slice = assets.slice(index, index + PARALLEL_READS);
+    for (let index = 0; index < page.assets.length; index += PARALLEL_READS) {
+      const slice = page.assets.slice(index, index + PARALLEL_READS);
       const resolved = await Promise.all(
         slice.map(async (asset): Promise<GeoPhoto | null> => {
           try {
-            const location = await asset.getLocation();
+            const info = await MediaLibrary.getAssetInfoAsync(asset);
+            const location = info.location;
             if (!location || !isValidCoordinate(location.latitude, location.longitude)) {
               return null;
             }
 
-            const [creationTime, uri] = await Promise.all([
-              asset.getCreationTime(),
-              asset.getUri(),
-            ]);
-
             return {
               id: asset.id,
-              uri,
-              creationTime: creationTime ?? Date.now(),
+              uri: info.localUri ?? asset.uri,
+              creationTime: asset.creationTime,
               latitude: location.latitude,
               longitude: location.longitude,
             };
@@ -66,10 +53,10 @@ export async function scanPhotoLibrary(
       onProgress({ scanned, found: result.length });
     }
 
-    offset += assets.length;
-    if (assets.length < PAGE_SIZE) {
+    if (!page.hasNextPage) {
       break;
     }
+    after = page.endCursor;
   }
 
   return result;
