@@ -6,6 +6,9 @@
 
 - prieigos prie „Photos“ bibliotekos užklausa;
 - visų nuotraukų su GPS vieta nuskaitymas;
+- galerijos nuskaitymas mažomis 200 nuotraukų partijomis;
+- pažangos išsaugojimas ir tęstinumas po programėlės uždarymo;
+- vietinė SQLite duomenų bazė vietoje visų rezultatų laikymo RAM;
 - automatinis taškų grupavimas pagal žemėlapio mastelį;
 - filtravimas pagal metus;
 - vietos nuotraukų peržiūra;
@@ -25,4 +28,4 @@ Telefonas ir kompiuteris turi būti tame pačiame „Wi-Fi“ tinkle. Jei prisij
 
 ## Privatumas
 
-Programėlė nenaudoja serverio ir neįkelia nuotraukų į internetą. Ji išsaugo tik nuotraukų vietų, datų ir vietinių identifikatorių kopiją pačiame telefone.
+Programėlė nenaudoja serverio ir neįkelia nuotraukų į internetą. Ji išsaugo tik nuotraukų vietų, datų ir vietinių identifikatorių kopiją pačiame telefone. Vienu metu apdorojama daugiausia 200 nuotraukų, o žemėlapyje į RAM įkeliami tik matomo ploto sugrupuoti taškai.
