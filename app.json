@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Kur buvau",
+    "slug": "kur-buvau",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "lt.pcblit.kurbuvau"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "lt.pcblit.kurbuvau"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-image",
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Programėlė nuskaito nuotraukų vietas, kad parodytų, kur esi buvęs.",
+          "savePhotosPermission": "Programėlė neprašo teisės keisti tavo nuotraukų.",
+          "granularPermissions": [
+            "photo"
+          ]
+        }
+      ]
+    ]
+  }
+}
